@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, Literal, Optional, Union
 import torch
 import torch.nn as nn
 
-from torch_probe._probe import probe_batch_size
+from batch_probe._probe import probe_batch_size
 
 _cache: dict[str, int] = {}
 

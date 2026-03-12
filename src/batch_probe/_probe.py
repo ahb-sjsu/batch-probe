@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, Literal, Optional, Union
 import torch
 import torch.nn as nn
 
-from torch_probe._cleanup import gpu_cleanup
+from batch_probe._cleanup import gpu_cleanup
 
 
 def _extract_loss(outputs: Any) -> torch.Tensor:
@@ -90,7 +90,7 @@ def probe_batch_size(
 
     Example::
 
-        from torch_probe import probe_batch_size
+        from batch_probe import probe_batch_size
 
         batch_size = probe_batch_size(
             model,

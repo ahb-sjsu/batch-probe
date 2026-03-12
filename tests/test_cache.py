@@ -8,7 +8,7 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from torch_probe import cached_probe, clear_cache
+from batch_probe import cached_probe, clear_cache
 
 
 class CountingModel(nn.Module):

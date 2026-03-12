@@ -1,4 +1,4 @@
-# torch-probe
+# batch-probe
 
 Find the maximum batch size that fits in GPU memory.
 
@@ -15,18 +15,18 @@ batch_size = 16   # OOM
 batch_size = 8    # works... but am I leaving GPU memory on the table?
 ```
 
-`torch-probe` automates this. It binary-searches for the largest batch size your model can handle, with a safety margin so you don't OOM during real training.
+`batch-probe` automates this. It binary-searches for the largest batch size your model can handle, with a safety margin so you don't OOM during real training.
 
 ## Install
 
 ```bash
-pip install torch-probe
+pip install batch-probe
 ```
 
 ## Quick Start
 
 ```python
-from torch_probe import probe_batch_size
+from batch_probe import probe_batch_size
 
 batch_size = probe_batch_size(
     model,
@@ -35,7 +35,7 @@ batch_size = probe_batch_size(
         "attention_mask": torch.ones(bs, 512, dtype=torch.long, device="cuda"),
     },
 )
-# torch-probe: probing batch size (mode=train, range=[1, 4096], headroom=20%)... max=6, safe=4
+# batch-probe: probing batch size (mode=train, range=[1, 4096], headroom=20%)... max=6, safe=4
 ```
 
 That's it. Three lines. Works with any `nn.Module`.
@@ -106,7 +106,7 @@ batch_size = probe_batch_size(model, input_fn, headroom=0.05)
 Use `cached_probe` to avoid re-probing the same model:
 
 ```python
-from torch_probe import cached_probe, clear_cache
+from batch_probe import cached_probe, clear_cache
 
 batch_size = cached_probe(model, input_fn, mode="train")  # probes
 batch_size = cached_probe(model, input_fn, mode="train")  # cache hit
@@ -127,7 +127,7 @@ The OOM recovery uses `gc.collect()` + `torch.cuda.empty_cache()` + `torch.cuda.
 
 ## vs. Alternatives
 
-| Feature | torch-probe | Lightning BatchSizeFinder | HF `auto_find_batch_size` |
+| Feature | batch-probe | Lightning BatchSizeFinder | HF `auto_find_batch_size` |
 |---|---|---|---|
 | Works with raw PyTorch | Yes | No (needs LightningModule) | No (needs HF Trainer) |
 | Algorithm | Binary search | Power-of-2 scaling | Halve on OOM |

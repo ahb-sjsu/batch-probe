@@ -13,7 +13,7 @@ import pytest
 import torch
 import torch.nn as nn
 
-from torch_probe import probe_batch_size
+from batch_probe import probe_batch_size
 
 
 class FakeOOMModel(nn.Module):
