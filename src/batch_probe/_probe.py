@@ -115,8 +115,12 @@ def probe_batch_size(
     best = low
 
     if verbose:
-        print(f"torch-probe: probing batch size (mode={mode}, range=[{low}, {high}], "
-              f"headroom={headroom:.0%})...", end="", flush=True)
+        print(
+            f"torch-probe: probing batch size (mode={mode}, range=[{low}, {high}], "
+            f"headroom={headroom:.0%})...",
+            end="",
+            flush=True,
+        )
 
     while low <= high:
         mid = (low + high) // 2

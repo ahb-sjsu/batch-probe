@@ -27,18 +27,21 @@ class CountingModel(nn.Module):
         return self.linear(x)
 
 
+def _make_input(bs):
+    return {"x": torch.randn(bs, 10)}
+
+
 class TestCachedProbe:
     def setup_method(self):
         clear_cache()
 
     def test_cache_hit(self):
         model = CountingModel(oom_threshold=8)
-        input_fn = lambda bs: {"x": torch.randn(bs, 10)}
 
-        r1 = cached_probe(model, input_fn, mode="infer", high=32, verbose=False)
+        r1 = cached_probe(model, _make_input, mode="infer", high=32, verbose=False)
         calls_after_first = model.call_count
 
-        r2 = cached_probe(model, input_fn, mode="infer", high=32, verbose=False)
+        r2 = cached_probe(model, _make_input, mode="infer", high=32, verbose=False)
         calls_after_second = model.call_count
 
         assert r1 == r2
@@ -46,25 +49,22 @@ class TestCachedProbe:
 
     def test_different_modes_separate_cache(self):
         model = CountingModel(oom_threshold=8)
-        input_fn = lambda bs: {"x": torch.randn(bs, 10)}
 
-        r_train = cached_probe(model, input_fn, mode="train", high=32, verbose=False)
-        r_infer = cached_probe(model, input_fn, mode="infer", high=32, verbose=False)
+        r_train = cached_probe(model, _make_input, mode="train", high=32, verbose=False)
+        r_infer = cached_probe(model, _make_input, mode="infer", high=32, verbose=False)
 
         # Both should probe (different modes = different cache keys)
-        # Results may differ since train mode uses backward pass
         assert isinstance(r_train, int)
         assert isinstance(r_infer, int)
 
     def test_clear_cache(self):
         model = CountingModel(oom_threshold=8)
-        input_fn = lambda bs: {"x": torch.randn(bs, 10)}
 
-        cached_probe(model, input_fn, mode="infer", high=32, verbose=False)
+        cached_probe(model, _make_input, mode="infer", high=32, verbose=False)
         calls_first = model.call_count
 
         clear_cache()
-        cached_probe(model, input_fn, mode="infer", high=32, verbose=False)
+        cached_probe(model, _make_input, mode="infer", high=32, verbose=False)
         calls_second = model.call_count
 
         assert calls_second > calls_first  # Had to re-probe after clearing

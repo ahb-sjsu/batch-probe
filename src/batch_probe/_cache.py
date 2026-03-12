@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Literal, Optional, Union
+from typing import Any, Callable, Dict, Literal
 
 import torch
 import torch.nn as nn
@@ -27,9 +27,7 @@ def _make_key(
     # Probe input shapes at batch=1
     try:
         sample = input_fn(1)
-        shapes = "_".join(
-            f"{k}:{tuple(v.shape)}:{v.dtype}" for k, v in sorted(sample.items())
-        )
+        shapes = "_".join(f"{k}:{tuple(v.shape)}:{v.dtype}" for k, v in sorted(sample.items()))
         # Clean up sample tensors
         del sample
     except Exception:

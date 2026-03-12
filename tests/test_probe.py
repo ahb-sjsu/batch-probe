@@ -26,9 +26,7 @@ class FakeOOMModel(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if x.shape[0] > self.oom_threshold:
-            raise torch.cuda.OutOfMemoryError(
-                "CUDA out of memory. Tried to allocate 2.00 GiB"
-            )
+            raise torch.cuda.OutOfMemoryError("CUDA out of memory. Tried to allocate 2.00 GiB")
         return self.linear(x)
 
 

@@ -1,5 +1,10 @@
 # batch-probe
 
+[![CI](https://github.com/ahb-sjsu/batch-probe/actions/workflows/ci.yml/badge.svg)](https://github.com/ahb-sjsu/batch-probe/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/batch-probe)](https://pypi.org/project/batch-probe/)
+[![Python](https://img.shields.io/pypi/pyversions/batch-probe)](https://pypi.org/project/batch-probe/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Find the maximum batch size that fits in GPU memory.
 
 Binary search with OOM recovery, configurable safety headroom, no framework required.
