@@ -126,6 +126,9 @@ def probe_batch_size(
         mid = (low + high) // 2
         success = False
         inputs = None
+        outputs = None
+        loss = None
+        _optimizer = None
 
         try:
             if is_cuda:
@@ -134,14 +137,19 @@ def probe_batch_size(
 
             if mode == "train":
                 model.train()
+                # Include optimizer step to account for optimizer state memory
+                # (AdamW stores momentum + variance = 2x model params)
+                _optimizer = torch.optim.AdamW(model.parameters(), lr=1e-5)
                 outputs = model(**inputs)
                 loss = _extract_loss(outputs)
                 loss.backward()
+                _optimizer.step()
+                _optimizer.zero_grad(set_to_none=True)
                 model.zero_grad(set_to_none=True)
             else:
                 model.eval()
                 with torch.no_grad():
-                    model(**inputs)
+                    outputs = model(**inputs)
 
             success = True
 
@@ -152,7 +160,10 @@ def probe_batch_size(
                 model.train(was_training)
                 raise
         finally:
-            # Always clean up tensors
+            # Always clean up all tensors to prevent memory leaks
+            del outputs, loss
+            if _optimizer is not None:
+                del _optimizer
             if inputs is not None:
                 del inputs
             if is_cuda:
