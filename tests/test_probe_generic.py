@@ -12,6 +12,7 @@ class TestGenericProbe:
 
     def test_finds_max_batch_simple(self):
         """Binary search finds the right batch size for a simple workload."""
+
         # Simulate: works up to batch=500, OOM above
         def work(n):
             if n > 500:
@@ -22,6 +23,7 @@ class TestGenericProbe:
 
     def test_headroom_applied(self):
         """Headroom reduces the returned batch size."""
+
         def work(n):
             if n > 1000:
                 raise MemoryError("out of memory")
@@ -31,6 +33,7 @@ class TestGenericProbe:
 
     def test_headroom_zero(self):
         """Zero headroom returns the exact max."""
+
         def work(n):
             if n > 200:
                 raise MemoryError("out of memory")
@@ -40,6 +43,7 @@ class TestGenericProbe:
 
     def test_all_oom_returns_low(self):
         """If everything OOMs, returns at least 1."""
+
         def work(n):
             raise MemoryError("out of memory")
 
@@ -48,6 +52,7 @@ class TestGenericProbe:
 
     def test_runtime_error_oom(self):
         """RuntimeError with 'out of memory' is treated as OOM."""
+
         def work(n):
             if n > 100:
                 raise RuntimeError("CUDA out of memory. Tried to allocate 7GB.")
@@ -57,6 +62,7 @@ class TestGenericProbe:
 
     def test_non_oom_runtime_error_propagates(self):
         """RuntimeError without 'out of memory' is re-raised."""
+
         def work(n):
             raise RuntimeError("something else broke")
 
@@ -65,6 +71,7 @@ class TestGenericProbe:
 
     def test_non_memory_error_propagates(self):
         """Non-memory exceptions propagate."""
+
         def work(n):
             raise ValueError("bad input")
 
@@ -73,6 +80,7 @@ class TestGenericProbe:
 
     def test_verbose_output(self, capsys):
         """Verbose mode prints progress."""
+
         def work(n):
             if n > 50:
                 raise MemoryError("oom")
@@ -86,6 +94,7 @@ class TestGenericProbe:
     def test_low_equals_high(self):
         """Works when low == high."""
         calls = []
+
         def work(n):
             calls.append(n)
 
@@ -96,6 +105,7 @@ class TestGenericProbe:
     def test_large_range(self):
         """Handles large search ranges efficiently (log2 steps)."""
         call_count = 0
+
         def work(n):
             nonlocal call_count
             call_count += 1

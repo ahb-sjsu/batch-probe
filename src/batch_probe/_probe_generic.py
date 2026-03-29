@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import gc
 import logging
-from typing import Callable, Optional
+from typing import Callable
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ def _gpu_cleanup_generic(backend: str = "auto") -> None:
     if backend in ("auto", "torch"):
         try:
             import torch
+
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
                 torch.cuda.synchronize()
@@ -28,6 +29,7 @@ def _gpu_cleanup_generic(backend: str = "auto") -> None:
     if backend in ("auto", "cupy"):
         try:
             import cupy as cp
+
             pool = cp.get_default_memory_pool()
             pool.free_all_blocks()
             pinned_pool = cp.get_default_pinned_memory_pool()
@@ -39,6 +41,7 @@ def _gpu_cleanup_generic(backend: str = "auto") -> None:
     if backend in ("auto", "jax"):
         try:
             import jax
+
             jax.clear_caches()
         except (ImportError, AttributeError):
             pass
@@ -106,11 +109,13 @@ def probe(
     oom_exceptions = [MemoryError]
     try:
         import torch
+
         oom_exceptions.append(torch.cuda.OutOfMemoryError)
     except (ImportError, AttributeError):
         pass
     try:
         import cupy as cp
+
         oom_exceptions.append(cp.cuda.memory.OutOfMemoryError)
     except (ImportError, AttributeError):
         pass

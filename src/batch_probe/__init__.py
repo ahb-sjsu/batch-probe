@@ -17,6 +17,7 @@ __version__ = "0.3.0"
 try:
     from batch_probe._probe import probe_batch_size
     from batch_probe._cache import cached_probe, clear_cache
+
     __all__ += ["probe_batch_size", "cached_probe", "clear_cache"]
 except ImportError:
     pass
