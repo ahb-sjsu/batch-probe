@@ -5,9 +5,9 @@
 [![Python](https://img.shields.io/pypi/pyversions/batch-probe)](https://pypi.org/project/batch-probe/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Find the maximum batch size that fits in GPU memory.
+GPU memory probing and thermal-aware CPU thread control.
 
-Binary search with OOM recovery, configurable safety headroom, no framework required.
+Binary search with OOM recovery, configurable safety headroom, no framework required. New in v0.4.0: thermal-aware thread tuning for CPU workloads.
 
 ## The Problem
 
@@ -164,6 +164,101 @@ Same as `probe_batch_size` but caches results keyed on model class, param count,
 ### `clear_cache()`
 
 Clear all cached probe results.
+
+---
+
+## Thermal-Aware Thread Control (v0.4.0)
+
+For CPU-bound workloads, `batch-probe` can find the maximum thread count that keeps your CPU under a target temperature, and continuously adjust it during long-running jobs.
+
+### `probe_threads(work_fn, *, max_temp, low, high, settle_time, work_time, cooldown_time, verbose)`
+
+One-shot binary search for the maximum safe thread count. Runs your workload at different thread counts and reads CPU temperature to find the thermal limit.
+
+```python
+from batch_probe import probe_threads
+import numpy as np
+
+def stress(n):
+    import os
+    os.environ["OMP_NUM_THREADS"] = str(n)
+    for _ in range(100):
+        a = np.random.randn(2000, 2000)
+        _ = a @ a.T
+
+threads = probe_threads(stress, max_temp=85.0)
+print(f"Safe thread count: {threads}")
+```
+
+- **work_fn** (`Callable[[int], None]`): Function that runs a CPU workload using the given number of threads.
+- **max_temp** (`float`): Maximum acceptable CPU temperature in Celsius. Default: `85.0`.
+- **low** (`int`): Minimum thread count. Default: `1`.
+- **high** (`int | None`): Maximum thread count. Default: `os.cpu_count()`.
+- **settle_time** (`float`): Seconds to wait before reading temperature. Default: `5.0`.
+- **work_time** (`float`): Seconds to run the workload per probe. Default: `10.0`.
+- **cooldown_time** (`float`): Seconds to wait between probes. Default: `15.0`.
+- **verbose** (`bool`): Print progress. Default: `True`.
+
+Returns: `int` -- safe thread count.
+
+### `ThermalController(target_temp, max_threads, min_threads, poll_interval, Kp, Ki, Kd, lookahead, verbose)`
+
+Continuous adaptive thread controller using a Kalman-filtered thermal state estimator. Runs a background thread that reads CPU temperature and adjusts the recommended thread count using PI+D control with feedforward.
+
+```python
+from batch_probe import ThermalController
+
+ctrl = ThermalController(target_temp=82.0, max_threads=48)
+ctrl.start()
+
+# In your workload loop:
+while work_remaining:
+    n = ctrl.get_threads()
+    run_workload(n_threads=n)
+
+ctrl.stop()
+print(ctrl.summary())
+```
+
+- **target_temp** (`float`): Desired CPU temperature setpoint. Default: `82.0`.
+- **max_threads** (`int | None`): Maximum thread count. Default: `os.cpu_count()`.
+- **min_threads** (`int`): Minimum thread count. Default: `1`.
+- **poll_interval** (`float`): Seconds between sensor reads. Default: `2.0`.
+- **Kp, Ki, Kd** (`float`): PID controller gains. Defaults: `3.0`, `0.1`, `10.0`.
+- **lookahead** (`float`): Seconds to predict ahead for proactive control. Default: `5.0`.
+
+Methods:
+- `start()` -- Start background thermal monitoring.
+- `stop()` -- Stop the background thread.
+- `get_threads()` -- Get the current recommended thread count (thread-safe).
+- `summary()` -- Return a dict of control history statistics (temp mean/max/min, threads mean/min/max, time over target).
+
+### `ThermalJobManager(target_temp, max_concurrent, settle_time, poll_interval, cooldown_margin, verbose)`
+
+Manages parallel subprocess jobs with thermal throttling. Launches jobs up to `max_concurrent`, but pauses new launches when CPU temperature exceeds the target.
+
+```python
+from batch_probe import ThermalJobManager
+
+jobs = [
+    ("dataset_A", ["python", "train.py", "--data", "A"]),
+    ("dataset_B", ["python", "train.py", "--data", "B"]),
+    ("dataset_C", ["python", "train.py", "--data", "C"]),
+]
+
+mgr = ThermalJobManager(target_temp=85.0, max_concurrent=4)
+results = mgr.run(jobs, cwd="/path/to/workdir")
+# results: {"dataset_A": 0, "dataset_B": 0, "dataset_C": 0}
+```
+
+- **target_temp** (`float`): Maximum CPU temperature. Default: `85.0`.
+- **max_concurrent** (`int`): Maximum simultaneous jobs. Default: `4`.
+- **settle_time** (`float`): Seconds to wait after launch before reading temp. Default: `10.0`.
+- **poll_interval** (`float`): Seconds between job status checks. Default: `5.0`.
+- **cooldown_margin** (`float`): Must be this many degrees below target to launch. Default: `3.0`.
+
+Method:
+- `run(jobs, cwd=None, log_dir=None)` -- Run all jobs. Returns `dict[str, int]` mapping job name to exit code. Each job gets a log file at `{log_dir}/{name}.log`.
 
 ## License
 

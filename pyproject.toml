@@ -4,15 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "batch-probe"
-version = "0.3.0"
-description = "Find the maximum batch size that fits in GPU memory. Works with PyTorch, CuPy, JAX, or any GPU framework."
+version = "0.4.0"
+description = "GPU memory probing and thermal-aware CPU thread control. Works with PyTorch, CuPy, JAX, or any GPU framework."
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 authors = [
     {name = "Andrew H. Bond"},
 ]
-keywords = ["pytorch", "cupy", "jax", "gpu", "memory", "batch-size", "oom", "cuda"]
+keywords = ["pytorch", "cupy", "jax", "gpu", "memory", "batch-size", "oom", "cuda", "thermal", "threads"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -25,7 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-dependencies = []
+dependencies = ["numpy>=1.22.0"]
 
 [project.optional-dependencies]
 torch = ["torch>=1.13.0"]
@@ -36,6 +36,7 @@ dev = [
     "pytest-cov>=4.0.0",
     "ruff>=0.4.0",
     "torch>=1.13.0",
+    "numpy>=1.22.0",
 ]
 
 [project.urls]
