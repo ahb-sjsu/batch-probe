@@ -128,6 +128,7 @@ class ThermalController:
         Kd: float = 10.0,
         lookahead: float = 5.0,
         verbose: bool = True,
+        auto_apply: bool = False,
     ):
         self.target = target_temp
         self.max_threads = max_threads or (os.cpu_count() or 48)
@@ -138,6 +139,8 @@ class ThermalController:
         self.Kd = Kd
         self.lookahead = lookahead
         self.verbose = verbose
+        self.auto_apply = auto_apply
+        self._pid = os.getpid()
 
         self.kf = KalmanThermal(dt=poll_interval)
         self._threads = self.max_threads
@@ -162,6 +165,8 @@ class ThermalController:
         self._stop.clear()
         self._thread = threading.Thread(target=self._loop, daemon=True)
         self._thread.start()
+        if self.auto_apply:
+            self._apply_threads(self._threads)
         if self.verbose:
             log.info(
                 "ThermalController started: target=%.0f°C, max=%d threads",
@@ -207,7 +212,11 @@ class ThermalController:
             new_threads = max(self.min_threads, min(self.max_threads, new_threads))
 
             with self._lock:
+                old = self._threads
                 self._threads = new_threads
+
+            if self.auto_apply and new_threads != old:
+                self._apply_threads(new_threads)
 
             self._history.append((time.time(), self.kf.temp, new_threads))
 
@@ -221,6 +230,22 @@ class ThermalController:
                 )
 
             self._stop.wait(self.poll_interval)
+
+    def _apply_threads(self, n: int) -> None:
+        """Apply thread count to OMP, MKL, torch, and CPU affinity."""
+        os.environ["OMP_NUM_THREADS"] = str(n)
+        os.environ["MKL_NUM_THREADS"] = str(n)
+        os.environ["OPENBLAS_NUM_THREADS"] = str(n)
+        try:
+            import torch
+
+            torch.set_num_threads(n)
+        except ImportError:
+            pass
+        try:
+            os.sched_setaffinity(self._pid, set(range(n)))
+        except (AttributeError, OSError):
+            pass
 
     def summary(self) -> dict:
         """Return control history summary."""

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "batch-probe"
-version = "0.4.0"
+version = "0.5.0"
 description = "GPU memory probing and thermal-aware CPU thread control. Works with PyTorch, CuPy, JAX, or any GPU framework."
 readme = "README.md"
 requires-python = ">=3.9"

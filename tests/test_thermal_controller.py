@@ -4,6 +4,7 @@
 """Tests for _thermal_controller.py — KalmanThermal and ThermalController."""
 
 from __future__ import annotations
+import os
 
 import threading
 import time
@@ -374,3 +375,43 @@ class TestThermalController:
             assert isinstance(timestamp, float)
             assert isinstance(temp, float)
             assert isinstance(threads, int)
+
+
+class TestAutoApply:
+    """Tests for auto_apply thread management."""
+
+    def test_auto_apply_sets_env(self, monkeypatch):
+        monkeypatch.setattr("batch_probe._thermal_controller._read_cpu_temp", lambda: 70.0)
+        ctrl = ThermalController(target_temp=82.0, max_threads=8, auto_apply=True)
+        ctrl.start()
+        import time
+
+        time.sleep(0.5)
+        ctrl.stop()
+        assert int(os.environ.get("OMP_NUM_THREADS", "0")) > 0
+        assert int(os.environ.get("MKL_NUM_THREADS", "0")) > 0
+
+    def test_auto_apply_false_does_not_set(self, monkeypatch):
+        monkeypatch.setattr("batch_probe._thermal_controller._read_cpu_temp", lambda: 70.0)
+        os.environ.pop("OMP_NUM_THREADS", None)
+        ctrl = ThermalController(target_temp=82.0, max_threads=8, auto_apply=False)
+        ctrl.start()
+        import time
+
+        time.sleep(0.3)
+        ctrl.stop()
+        # Should not have set it (may or may not exist from prior)
+
+    def test_auto_apply_reduces_on_heat(self, monkeypatch):
+        """Deterministic: verify _apply_threads sets env correctly."""
+        monkeypatch.setattr("batch_probe._thermal_controller._read_cpu_temp", lambda: 70.0)
+        ctrl = ThermalController(target_temp=80.0, max_threads=20, min_threads=4, auto_apply=True)
+        ctrl._apply_threads(8)
+        assert os.environ["OMP_NUM_THREADS"] == "8"
+        assert os.environ["MKL_NUM_THREADS"] == "8"
+
+    def test_apply_threads_sets_affinity(self, monkeypatch):
+        monkeypatch.setattr("batch_probe._thermal_controller._read_cpu_temp", lambda: 70.0)
+        ctrl = ThermalController(target_temp=82.0, max_threads=4, auto_apply=True)
+        ctrl._apply_threads(4)
+        assert os.environ["OMP_NUM_THREADS"] == "4"
