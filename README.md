@@ -130,6 +130,35 @@ clear_cache()  # reset if model changed
 
 The OOM recovery uses `gc.collect()` + `torch.cuda.empty_cache()` + `torch.cuda.synchronize()` to fully reclaim memory between iterations.
 
+```mermaid
+flowchart TB
+    START[probe_batch_size<br/>low=1, high=4096]
+    MID["mid = (low + high) div 2"]
+    DUM["input_fn(mid)<br/>build dummy tensors"]
+    FWD[forward pass<br/>+ backward in train mode]
+    OOM{OOM?}
+    CLEAN[gc.collect<br/>empty_cache<br/>synchronize]
+    DONE{low > high?}
+    OUT["return max_ok * (1 - headroom)"]
+
+    START --> MID --> DUM --> FWD --> OOM
+    OOM -->|yes| CLEAN
+    CLEAN -->|"high = mid - 1"| DONE
+    OOM -->|no| LO["low = mid + 1"]
+    LO --> DONE
+    DONE -->|no| MID
+    DONE -->|yes| OUT
+
+    classDef start fill:#e3f2fd,stroke:#1565c0;
+    classDef search fill:#fff3e0,stroke:#e65100;
+    classDef recovery fill:#ffcdd2,stroke:#b71c1c;
+    classDef out fill:#c8e6c9,stroke:#1b5e20;
+    class START start;
+    class MID,DUM,FWD,DONE,LO search;
+    class CLEAN,OOM recovery;
+    class OUT out;
+```
+
 ## vs. Alternatives
 
 | Feature | batch-probe | Lightning BatchSizeFinder | HF `auto_find_batch_size` |
