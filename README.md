@@ -9,6 +9,8 @@ GPU memory probing and thermal-aware CPU thread control.
 
 Binary search with OOM recovery, configurable safety headroom, no framework required. New in v0.4.0: thermal-aware thread tuning for CPU workloads.
 
+**Used in production:** [nats-bursting](https://github.com/ahb-sjsu/nats-bursting) uses `batch-probe` to right-size each burst's GPU batch — a BERT-base-scale encoder sized to an NVIDIA GV100 ran at **94% mean / 100% peak GPU utilization**, well above a shared cluster's sustained-utilization expectation.
+
 ## The Problem
 
 Every ML practitioner has done this:
