@@ -30,9 +30,8 @@ jobs:
       - name: Lint with ruff
         run: ruff check src/ tests/
 
-      - name: Type check (ty — advisory)
+      - name: Type check (ty)
         if: matrix.python-version == '3.12'
-        continue-on-error: true
         run: |
           pip install ty==0.0.55
           ty check src

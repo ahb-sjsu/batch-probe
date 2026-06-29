@@ -28,7 +28,7 @@ def _gpu_cleanup_generic(backend: str = "auto") -> None:
 
     if backend in ("auto", "cupy"):
         try:
-            import cupy as cp
+            import cupy as cp  # ty: ignore[unresolved-import]  # optional GPU backend
 
             pool = cp.get_default_memory_pool()
             pool.free_all_blocks()
@@ -40,7 +40,7 @@ def _gpu_cleanup_generic(backend: str = "auto") -> None:
 
     if backend in ("auto", "jax"):
         try:
-            import jax
+            import jax  # ty: ignore[unresolved-import]  # optional GPU backend
 
             jax.clear_caches()
         except (ImportError, AttributeError):
@@ -83,7 +83,7 @@ def probe(
 
     Example — CuPy::
 
-        import cupy as cp
+        import cupy as cp  # ty: ignore[unresolved-import]  # optional GPU backend
         from batch_probe import probe
 
         def my_work(n):
@@ -114,7 +114,7 @@ def probe(
     except (ImportError, AttributeError):
         pass
     try:
-        import cupy as cp
+        import cupy as cp  # ty: ignore[unresolved-import]  # optional GPU backend
 
         oom_exceptions.append(cp.cuda.memory.OutOfMemoryError)
     except (ImportError, AttributeError):
