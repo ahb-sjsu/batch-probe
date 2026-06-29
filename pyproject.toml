@@ -52,3 +52,5 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py39"
+[tool.ty.environment]
+python-platform = "linux"
