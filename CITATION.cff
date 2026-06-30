@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use batch-probe in your research, please cite it as below."
+title: "batch-probe: GPU memory probing and thermal-aware CPU thread control"
+type: software
+authors:
+  - family-names: Bond
+    given-names: Andrew H.
+    email: andrew.bond@sjsu.edu
+    affiliation: San Jose State University
+    orcid: "https://orcid.org/0009-0003-2599-6158"
+version: "0.5.0"
+date-released: "2026-06-30"
+license: MIT
+url: "https://github.com/ahb-sjsu/batch-probe"
+repository-code: "https://github.com/ahb-sjsu/batch-probe"
+keywords:
+  - pytorch
+  - cupy
+  - jax
+  - gpu
+  - memory
+  - batch-size
+  - oom
+  - cuda
+  - thermal
+  - threads
