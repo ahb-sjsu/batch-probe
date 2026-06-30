@@ -1,0 +1,10 @@
+{
+  "title": "batch-probe: GPU memory probing and thermal-aware CPU thread control",
+  "upload_type": "software",
+  "description": "Probes the largest OOM-safe GPU batch size (binary search with OOM recovery) and runs a Kalman-filtered, thermal-aware controller for CPU thread / GPU load to keep a node within its thermal envelope. Works with PyTorch, CuPy, JAX, or any GPU framework.",
+  "creators": [
+    {"name": "Bond, Andrew H.", "affiliation": "San Jose State University", "orcid": "0009-0003-2599-6158"}
+  ],
+  "license": {"id": "MIT"},
+  "keywords": ["pytorch", "cupy", "jax", "gpu", "memory", "batch-size", "oom", "cuda", "thermal", "threads"]
+}
